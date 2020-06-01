@@ -230,6 +230,12 @@ class ListCondaEnvironmentCommand(CondaCommand):
 class ActivateCondaEnvironmentCommand(CondaCommand):
     """Contains the methods needed to activate a conda environment."""
 
+    def is_enabled(self):
+        return (
+            (not self.project_data.get('conda_freeze_environment', False))
+            and super().is_enabled()
+        )
+
     def run(self):
         """Display 'Conda: Activate' in Sublime Text's command palette.
 
@@ -255,6 +261,12 @@ class ActivateCondaEnvironmentCommand(CondaCommand):
 
 class DeactivateCondaEnvironmentCommand(CondaCommand):
     """Contains the methods needed to deactivate a conda environment."""
+
+    def is_enabled(self):
+        return (
+            (not self.project_data.get('conda_freeze_environment', False))
+            and super().is_enabled()
+        )
 
     def run(self):
         """Display 'Conda: Deactivate' in Sublime Text's command palette.
