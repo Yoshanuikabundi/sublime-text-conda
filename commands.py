@@ -133,6 +133,59 @@ class CreateCondaEnvironmentCommand(CondaCommand):
             self.window.run_command('exec', {'cmd': cmd})
 
 
+class CreateCondaEnvironmentFromFileCommand(CondaCommand):
+    """
+    Contains the methods needed to create an environment from environment.yml.
+    """
+
+    def is_enabled(self):
+        for folder in self.window.folders():
+            if sys.platform == 'win32':
+                env_yml = folder + '\\environment.yml'
+            else:
+                env_yml = folder + '/environment.yml'
+
+            if os.path.isfile(env_yml):
+                self.env_yml = env_yml
+                return True
+
+        self.env_yml = None
+        return False
+
+    def run(self):
+        """Display 'Conda: Create from file' in Sublime's command palette."""
+        env_path = os.path.expanduser(self.settings.get('environment_directory'))
+        env_yml = os.path.abspath(self.env_yml)
+        with open(env_yml, 'r') as f:
+            env_name = [s[5:].strip() for s in f if s.startswith('name:')][-1]
+
+        env_path += env_name
+
+        if os.path.exists(env_path):
+            already_exists_warning = "\nWARNING: The path already exists."
+        else:
+            already_exists_warning = ""
+
+        if sublime.ok_cancel_dialog(
+            'Create a new Conda environment in {} from {}?{}'.format(
+                env_path,
+                env_yml,
+                already_exists_warning
+            ),
+            ok_title='Yes'
+        ):
+            self.create_environment(env_yml)
+
+    def create_environment(self, file=None):
+        if file is None:
+            file = os.path.abspath(self.env_yml)
+
+        """Create a conda environment in the envs directory."""
+        cmd = [self.executable, '-m', 'conda', 'env', 'create',
+               '-f', file, '--force']
+
+        self.window.run_command('exec', {'cmd': cmd})
+
 class RemoveCondaEnvironmentCommand(CondaCommand):
     """Contains the methods needed to remove a conda environment."""
 

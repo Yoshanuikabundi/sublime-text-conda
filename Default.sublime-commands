@@ -1,5 +1,6 @@
 [
     { "caption": "Conda: Create Environment", "command": "create_conda_environment" },
+    { "caption": "Conda: Create Environment from environment.yml", "command": "create_conda_environment_from_file" },
     { "caption": "Conda: Remove Environment", "command": "remove_conda_environment" },
     { "caption": "Conda: List Environments", "command": "list_conda_environment" },
     { "caption": "Conda: Activate Environment", "command": "activate_conda_environment" },
