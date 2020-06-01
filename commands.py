@@ -7,7 +7,6 @@ import json
 import sublime
 import sublime_plugin
 
-
 class CondaCommand(sublime_plugin.WindowCommand):
     """Contains all of the attributes that will be inherited by other commands."""
 
