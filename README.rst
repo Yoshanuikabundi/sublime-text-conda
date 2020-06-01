@@ -35,6 +35,13 @@ input box for the name of the desired conda environment to create. Next, the com
 palette will show the allowed Python versions to be used in the environment. Once the
 Python version is selected, conda will create the specified environment.
 
+**Conda: Create Environment from environment.yml**
+
+When selected from the command palette, `Conda: Create Environment from environment.yml`
+will create a new environment from the first `environment.yml` file found at the root
+of your project's folders. If no environment.yml file is found, the command will
+not appear in the palette.
+
 **Conda: Remove Environment**
 
 When selected from the command palette, `Conda: Remove Environment` will show all
@@ -93,6 +100,22 @@ the selected channel source remove from the conda configuration file.
 When selected from the command palette, `Conda: List Channel Sources` will display
 inside the command palette all channel sources listed inside the conda configuration
 file.
+
+Project management
+------------------
+
+The active environment is stored in the project variable `conda_environment`. You can
+specify this variable manually to use an environment outside of the conda envs folder.
+For example, the following project file would use the `conda` directory within the
+project as the active environment:
+
+    {
+        "conda_freeze_environment": true,
+        "conda_environment": "./conda",
+    }
+
+The `conda_freeze_environment` variable disables commands that would change
+`conda_environment`, so that it cannot be changed by accident.
 
 .. |travis| image:: https://img.shields.io/travis/mandeep/sublime-text-conda/master.svg?style=flat-square
     :target: https://travis-ci.org/mandeep/sublime-text-conda
