@@ -19,6 +19,14 @@ class CondaCommand(sublime_plugin.WindowCommand):
         return sublime.load_settings(expanded)
 
     @property
+    def environment(self):
+        """Get the active environment and expand variables"""
+        return sublime.expand_variables(
+            self.project_data['conda_environment'],
+            self.window.extract_variables()
+        )
+
+    @property
     def executable(self):
         """Retrieve the python executable path from settings."""
         return os.path.expanduser(self.settings.get('executable'))
@@ -282,7 +290,7 @@ class DeactivateCondaEnvironmentCommand(CondaCommand):
     def active_environment(self):
         """Retrieve the active conda environment."""
         try:
-            environment_path = self.project_data['conda_environment']
+            environment_path = self.environment
             environment_name = self.retrieve_environment_name(environment_path)
 
             return [[environment_name, os.path.dirname(environment_path)]]
@@ -321,11 +329,8 @@ class ListCondaPackageCommand(CondaCommand):
     def environment_packages(self):
         """List each package name and version installed in the environment."""
         try:
-            environment_path = self.project_data['conda_environment']
-            environment = self.retrieve_environment_name(environment_path)
-
             package_data = subprocess.check_output([self.executable, '-m', 'conda', 'list',
-                                                    '--name', environment],
+                                                    '--prefix', self.environment],
                                                    startupinfo=self.startupinfo, universal_newlines=True)
 
             packages = package_data.splitlines()[2:]
@@ -348,10 +353,8 @@ class InstallCondaPackageCommand(CondaCommand):
     def install_package(self, package):
         """Install the given package name via conda."""
         try:
-            environment_path = self.project_data['conda_environment']
-            environment = self.retrieve_environment_name(environment_path)
             cmd = [self.executable, '-m', 'conda', 'install', package,
-                   '--name', environment, '-y', '-q']
+                   '--prefix', self.environment, '-y', '-q']
             self.window.run_command('exec', {'cmd': cmd})
 
         except KeyError:
@@ -373,11 +376,8 @@ class RemoveCondaPackageCommand(CondaCommand):
         ListCondaPackageCommand could not be inherited properly.
         """
         try:
-            environment_path = self.project_data['conda_environment']
-            environment = self.retrieve_environment_name(environment_path)
-
             package_data = subprocess.check_output([self.executable, '-m', 'conda', 'list',
-                                                    '--name', environment],
+                                                    '--prefix', self.environment],
                                                    startupinfo=self.startupinfo, universal_newlines=True)
 
             packages = package_data.splitlines()[2:]
@@ -393,12 +393,8 @@ class RemoveCondaPackageCommand(CondaCommand):
         if index != -1:
             package_to_remove = self.environment_packages[index]
 
-            environment_path = self.project_data['conda_environment']
-
-            environment = self.retrieve_environment_name(environment_path)
-
             cmd = [self.executable, '-m', 'conda', 'remove', package_to_remove,
-                   '--name', environment, '-y', '-q']
+                   '--prefix', self.environment, '-y', '-q']
 
             self.window.run_command('exec', {'cmd': cmd})
 
@@ -542,7 +538,7 @@ class ExecuteCondaEnvironmentCommand(CondaCommand):
         compiled dependencies.
         """
         if sys.platform == 'win32' and self.conda_version >= (4, 6):
-            env_path = self.project_data['conda_environment']
+            env_path = self.environment
             bin_path = os.path.join(env_path, 'Library', 'bin')
             os.environ['PATH'] = os.pathsep.join((bin_path, self.os_env_path))
         return self
@@ -558,9 +554,8 @@ class ExecuteCondaEnvironmentCommand(CondaCommand):
         environment's bin directory is used to build the file.
         """
         try:
-            environment = self.project_data['conda_environment']
+            environment = self.environment
             run_through_shell = self.settings.get('run_through_shell', False)
-
 
             if not os.path.exists(environment):
                 create_cmd = CreateCondaEnvironmentFromFileCommand(self.window)

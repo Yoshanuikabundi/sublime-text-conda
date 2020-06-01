@@ -111,7 +111,7 @@ project as the active environment:
 
     {
         "conda_freeze_environment": true,
-        "conda_environment": "./conda",
+        "conda_environment": "$project_path/conda",
     }
 
 The `conda_freeze_environment` variable disables commands that would change
