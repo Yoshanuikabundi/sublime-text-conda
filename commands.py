@@ -173,15 +173,19 @@ class CreateCondaEnvironmentFromFileCommand(CondaCommand):
             ),
             ok_title='Yes'
         ):
-            self.create_environment(env_yml)
+            self.create_environment(yml=env_yml)
 
-    def create_environment(self, file=None):
-        if file is None:
-            file = os.path.abspath(self.env_yml)
+    def create_environment(self, yml=None, prefix=None):
+        if yml is None:
+            yml = os.path.abspath(self.env_yml)
 
         """Create a conda environment in the envs directory."""
         cmd = [self.executable, '-m', 'conda', 'env', 'create',
-               '-f', file, '--force']
+               '-f', yml, '--force']
+
+        if prefix is not None:
+            cmd.append('--prefix')
+            cmd.append(prefix)
 
         self.window.run_command('exec', {'cmd': cmd})
 
@@ -545,6 +549,31 @@ class ExecuteCondaEnvironmentCommand(CondaCommand):
             environment = self.project_data['conda_environment']
             run_through_shell = self.settings.get('run_through_shell', False)
 
+
+            if not os.path.exists(environment):
+                create_cmd = CreateCondaEnvironmentFromFileCommand(self.window)
+                if create_cmd.is_enabled():
+                    dialog = sublime.yes_no_cancel_dialog(
+                        'Environment specified in project does not exist. '
+                        'Create it from environment.yml?',
+                        yes_title='Yes',
+                        no_title='Create from scratch'
+                    )
+                else:
+                    dialog = sublime.ok_cancel_dialog(
+                        'Environment specified in project does not exist. '
+                        'Create it?'
+                    )
+
+                if dialog == sublime.DIALOG_YES:
+                    os.mkdir(environment)
+                    create_cmd.create_environment(prefix=environment)
+                    return
+                elif dialog == sublime.DIALOG_NO or dialog == True:
+                    self.window.run_command('create_conda_environment')
+                    return
+                else:
+                    return
 
             if kwargs['cmd'][0] == 'python':
                 use_pythonw = self.settings.get('use_pythonw', False)
