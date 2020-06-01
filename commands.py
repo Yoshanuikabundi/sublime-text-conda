@@ -543,17 +543,26 @@ class ExecuteCondaEnvironmentCommand(CondaCommand):
         """
         try:
             environment = self.project_data['conda_environment']
-            use_pythonw = self.settings.get('use_pythonw', False)
             run_through_shell = self.settings.get('run_through_shell', False)
 
-            python_executable = 'pythonw' if use_pythonw else 'python'
 
-            if sys.platform == 'win32':
-                executable_path = '{}\\{}' .format(environment, python_executable)
+            if kwargs['cmd'][0] == 'python':
+                use_pythonw = self.settings.get('use_pythonw', False)
+                python_executable = 'pythonw' if use_pythonw else 'python'
+
+                if sys.platform == 'win32':
+                    executable_path = '{}\\{}' .format(environment, python_executable)
+                else:
+                    executable_path = '{}/bin/{}' .format(environment, python_executable)
+
+                kwargs['cmd'][0] = os.path.normpath(executable_path)
             else:
-                executable_path = '{}/bin/{}' .format(environment, python_executable)
+                kwargs['cmd'][:1] = [
+                    'conda', 'run',
+                    '--prefix', environment,
+                    kwargs['cmd'][0]
+                ]
 
-            kwargs['cmd'][0] = os.path.normpath(executable_path)
             kwargs['shell'] = run_through_shell
 
         except KeyError:
